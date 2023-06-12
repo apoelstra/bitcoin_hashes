@@ -44,7 +44,7 @@ impl Default for HashEngine {
 impl crate::HashEngine for HashEngine {
     type MidState = Midstate;
 
-    #[cfg(not(fuzzing))]
+    #[cfg(not(bitcoin_hashes_fuzz))]
     fn midstate(&self) -> Midstate {
         let mut ret = [0; 32];
         for (val, ret_bytes) in self.h.iter().zip(ret.chunks_mut(4)) {
@@ -53,7 +53,7 @@ impl crate::HashEngine for HashEngine {
         Midstate(ret)
     }
 
-    #[cfg(fuzzing)]
+    #[cfg(bitcoin_hashes_fuzz)]
     fn midstate(&self) -> Midstate {
         let mut ret = [0; 32];
         ret.copy_from_slice(&self.buffer[..32]);
@@ -104,7 +104,7 @@ impl crate::Hash for Hash {
     type Engine = HashEngine;
     type Inner = [u8; 32];
 
-    #[cfg(not(fuzzing))]
+    #[cfg(not(bitcoin_hashes_fuzz))]
     fn from_engine(mut e: HashEngine) -> Hash {
         // pad buffer with a single 1-bit then all 0s, until there are exactly 8 bytes remaining
         let data_len = e.length as u64;
@@ -124,7 +124,7 @@ impl crate::Hash for Hash {
         Hash(e.midstate().into_inner())
     }
 
-    #[cfg(fuzzing)]
+    #[cfg(bitcoin_hashes_fuzz)]
     fn from_engine(e: HashEngine) -> Hash {
         let mut hash = e.midstate().into_inner();
         if hash == [0; 32] {
